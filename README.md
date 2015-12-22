@@ -1,3 +1,5 @@
+Simple Distributed Munging in C++
+
 src: C++ source
 to compile:
 ```
