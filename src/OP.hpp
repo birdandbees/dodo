@@ -1,3 +1,5 @@
+#ifndef __AVANT_OP_HPP__
+#define __AVANT_OP_HPP__
 #include <string>
 #include <vector>
 #include <string>
@@ -12,6 +14,7 @@ namespace avant_analytics
 		OP(){};
 		OP(int op, vector<string> args); 
 		void deserialize(const string& config); 
+		void deserialize(int rule_number, const string& config); 
 		string serialize();
 	};
 }

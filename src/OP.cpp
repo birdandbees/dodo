@@ -27,6 +27,14 @@ namespace avant_analytics
 		split(args, tokens[1], boost::is_any_of(","));
 		params = args;
 	}
+	
+	void OP::deserialize(int rule_number, const string& config)
+	{
+		op_id = rule_number;
+		vector<string> args;
+		split(args, config, boost::is_any_of(","));
+		params = args;
+	}
 
 
 	string OP::serialize()
