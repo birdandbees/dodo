@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <string>
+#include <algorithm>
 using namespace std;
 namespace avant_analytics
 {
@@ -11,9 +12,9 @@ namespace avant_analytics
 		int op_id;
 		vector<string> params;
 		vector<int> range;
-		inline void add(vector<string> args){ params = args;};
+		inline void add(vector<string>& args){ copy(args.begin(), args.end(), params.begin());};
 		inline void add(int rule_number) { op_id = rule_number; };
-		inline void add(vector<int> range_vec) { range = range_vec; };
+		inline void add(vector<int>& range_vec) { copy(range_vec.begin(), range_vec.end(),range.begin()); };
 	};
 }
 #endif

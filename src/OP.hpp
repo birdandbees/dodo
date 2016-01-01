@@ -18,3 +18,5 @@ namespace avant_analytics
 		string serialize();
 	};
 }
+
+#endif
