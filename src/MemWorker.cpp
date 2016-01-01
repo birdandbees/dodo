@@ -1,50 +1,34 @@
 #include "MemWorker.hpp"
-#include "Parser.hpp"
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <errno.h>
-#include <string.h>
-#include <stdarg.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-
-#include <sstream>
-#include <string>
-#include <iostream>
-#include <Eigen/Dense>
-
-#define DELIMITER  ','
-#define NEw_LINE 10
-
 
 // mmap + eigen
 namespace avant_analytics
 {
-
-	map<int, list<OP> > MemWorker::read(string rule_dir)
+	void MemWorker::load_cols(string col_file, vector<int>& cols)
 	{
-		ofstream out;
-		out.open(rule_dir + ".out", ofstream::out);
-		ifstream rule_file;
-		rule_file.open(rule_dir, ifstream::in);
-		map<int, list<OP> > rules;
-		vector<int> cols;
-		cols.resize(col_size);
-		init_cols(cols, 1);
+		ifstream col_file_input;
+		col_file_input.open(col_file, std::ifstream::in);
 		string line;
-		while ( getline(rule_file, line) )
-		{	
+		while ( getline(col_file_input, line) )
+		{
 			vector<string> splitted;
-			boost::split(splitted, line, boost::is_any_of(":"));
-			Parser::parse(splitted, cols, rules);
+			boost::split(splitted, line, boost::is_any_of(","));
+			for (auto s : splitted)
+			{
+				if (!s.empty())
+					cols.push_back(stoi(s));
+			}
+
 		}
-		rule_file.close();
-		return rules;
+		col_file_input.close();
+		sort(cols.begin(), cols.end());
 	}
 
-	static void MemWorker::check (int test, const char * message, ...)
+	void MemWorker::read(string rule_dir,vector<int>& cols, map<int, list<OP> >& col_rules, map<int, list<OP> >& row_rules, list<DepRule>& dep_rules )
+	{
+		Parser::parse_file(rule_dir, cols, col_rules, row_rules, dep_rules);
+	}
+
+	void MemWorker::check (int test, const char * message, ...)
 		{
 			if (test) {
 				va_list args;
@@ -56,8 +40,7 @@ namespace avant_analytics
 			}
 		}
 
-
-	//mmap
+	//TODO: mmap, when to unmap???
 	size_t MemWorker::load_data(string data_file, char * mapped)
 	{
 		int fd;
@@ -66,7 +49,7 @@ namespace avant_analytics
 		size_t size;
 		//const char * mapped;
 
-		fd = open (data_file, O_RDONLY);
+		fd = open (data_file.c_str(), O_RDONLY);
 		check (fd < 0, "open %s failed: %s", data_file, strerror (errno));
 
 		/* Get the size of the file. */
@@ -76,31 +59,41 @@ namespace avant_analytics
 
 		/* Memory-map the file shared. */
 		mapped = (char*) mmap (0, size, PROT_READ, MAP_SHARED, fd, 0);
-		check (mapped == MAP_FAILED, "mmap %s failed: %s",
-				data_file, strerror (errno));
+		check (mapped == MAP_FAILED, "mmap %s failed: %s", data_file, strerror (errno));
 		return size;
 	}
 
 	// load into eigen
 	// different logic for matrix computation
-	void MemWorker::process(string rule_dir, int col_size, int row_size, string data_file, map<int, FUNC>& func_map)
+	void MemWorker::process(string rule_dir, string col_file, int col_size, int row_size, string data_file)
 	{
 		ofstream out;
 		out.open(rule_dir + ".out", ofstream::out);
-		map<int, list<OP> > rules = read(rule_dir);
+		vector<int> cols;
+	  map<int, list<OP> > col_rules;
+	 	map<int, list<OP> > row_rules;
+		list<DepRule> dep_rules;
+		load_cols(col_file, cols);
+		map<int, MFUNC> mfunc_map;
+		map<int, FUNC> func_map;
+		MungeBits::load_funcs(func_map);
+		MungeBits::load_funcs(mfunc_map);
+		read(rule_dir, cols, col_rules, row_rules, dep_rules);
 		char * data;
 		size_t file_size = load_data(data_file, data);
-		Matrix<float, row_size, col_size> matrix;
+		Matrix<float, Dynamic, Dynamic> matrix(row_size, col_size);;
 		string value;
 		int count = 0;
 		int new_col = 0;
+		int new_row = 0;
 		map<int, int> col_mapping;
-		if ( data != null )
+		//apply row-level rules when loading into eigen
+		if ( data != NULL )
 		{
-			for (int i = 0; i < file_size; ++i )
+			for (size_t i = 0; i < file_size; ++i )
 			{
 				char c;
-				c = mapped[i];
+				c = data[i];
 				if ( c != DELIMITER && c != NEW_LINE )
 				{
 					value.append(1, c);
@@ -108,31 +101,46 @@ namespace avant_analytics
 				{
 					int row = count / col_size;
 					int col = count - (row * col_size);
-					map<int, list<OP> >::iterator map_it = rules.find(stoi(col));
-					if (map_it == rules.end()) continue;
-					matrix(row,new_col) =  stof(value);
+					// only consider this partiton relevant cols
+					if ( !binary_search(cols.begin(), cols.end(), col) ) continue;
+					map<int, list<OP> >::iterator map_it = row_rules.find(row);
+					if (map_it != row_rules.end())
+					{
+						//drop rows
+						for(auto i : map_it->second)
+						{
+							if (i.op_id == 0 ) continue;
+							// TODO: filter rules params
+						}
+					};	
+					matrix(new_row,new_col) =  stof(value);
 					value.clear();
 					count ++;
 					new_col++;
+					new_row++;
 					col_mapping[new_col] = col;
 				}
 			}
 		}
 
-		//apply FUNC
+		//TODO: apply dep_rules
+		typedef Matrix<float, Dynamic, 1> COLUMN;
+
+		//apply col-level FUNC
 		for (int i = 0;  i< new_col; ++i)
 		{
 
-					list<OP> list_of_rules = (list<OP>) rules[col_mapping[i]];
-					// col-wise operation
-					for (list<OP>::iterator it = list_of_rules.begin(); it != list_of_rules.end(); ++it )
-					{
-						matrix.col[i] = func_map[(*it).op_id]((*it).params, matrix.col[i]);
-					}	
-			}
-
+			list<OP> list_of_rules = (list<OP>) col_rules[col_mapping[i]];
+			// col-wise operation
+			for (list<OP>::iterator it = list_of_rules.begin(); it != list_of_rules.end(); ++it )
+			{
+				vector < Ref<COLUMN> > operator_vec;
+				operator_vec.push_back(matrix.col(i));
+				mfunc_map[(*it).op_id]((*it).params, operator_vec);
+			}	
 		}
-		data.close();
+
+		//data.close();
 		// export matrix to file
 		IOFormat CommaInitFmt(StreamPrecision, DontAlignCols, ", ", ", ", "", "", " << ", ";");
 		out << matrix.format(CommaInitFmt) << endl;
