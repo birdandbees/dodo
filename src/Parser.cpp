@@ -105,7 +105,7 @@ namespace avant_analytics
 
 	void Parser::generate_range(vector<int> & range, int start, int end)
 	{
-		for (int i = start; i < end; ++i)
+		for (int i = start; i <= end; ++i)
 		{
 			range.push_back(i);
 		}

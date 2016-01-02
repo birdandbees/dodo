@@ -39,7 +39,7 @@ namespace avant_analytics
 			void read(string rule_dir,vector<int>& cols, map<int, list<OP> >& col_rules, map<int, list<OP> >& row_rules, list<DepRule>& dep_rules);
 			void load_cols(string col_file, vector<int>& cols);
 			void check (int test, const char * message, ...);
-			size_t load_data(string data_file, char * mapped);
+			char*  load_data(string data_file, size_t& size);
 
 	};
 }
