@@ -7,6 +7,9 @@ namespace avant_analytics
 		// trim spaces before calling this function
 		// dropped columns are taken care of by smartSplit
 		check(line);
+		int rule_number = stoi(line[RULE_NUMBER]);
+		if ( line[RULE_TYPE].compare("c") == 0 && rule_number == 0 ) return;
+		sort(cols.begin(), cols.end());
 		// [r|c]:<line ranges>:<rule number>:<rule args>
 		string::size_type pos = line[LINE_RANGE].find_first_of("..");
 		map<int, list<OP> >& rule_ptr = line[RULE_TYPE].compare("c") == 0 ? col_rules : row_rules;
@@ -16,36 +19,42 @@ namespace avant_analytics
 			// range 
 			int col_start = stoi(line[LINE_RANGE].substr(0, pos));
 			int col_end = stoi(line[LINE_RANGE].substr(pos + 2));
-			intersection = get_intersection(cols, col_start, col_end);
-			if ( intersection.size() == 0 )
-			{
-				// do nothing
-				return;
-			};
+		  generate_range(intersection, col_start, col_end);	
 		}else if ( (pos = line[LINE_RANGE].find_first_of(",")) != string::npos )
 		{
 			// selection of cols|rows
 			vector<string> range_in_str;
-		  split(range_in_str, line[LINE_RANGE], boost::is_any_of(","));
-			for (auto i : range_in_str)
+			split(range_in_str, line[LINE_RANGE], boost::is_any_of(","));
+			for(auto i : range_in_str)
+			{
 				intersection.push_back(stoi(i));
-			
+			}
+
 		}else 
 		{
 			// single number
 			if ( stoi(line[LINE_RANGE]) == -1 )
 			{
 				// all cols
-			  sort(cols.begin(), cols.end());
+				sort(cols.begin(), cols.end());
 				copy(cols.begin(), cols.end(), intersection.begin());
 			}else
 			{
 				intersection.push_back(stoi(line[LINE_RANGE]));
 			}
-			
-		}
 
-		int rule_number = stoi(line[RULE_NUMBER]);
+		}
+		// only get intersection for col-level rules
+		if ( line[RULE_TYPE].compare("c") == 0 )
+		{
+			sort(intersection.begin(), intersection.end());
+			vector<int> inter(cols.size());
+			vector<int>::iterator it = set_intersection (cols.begin(), cols.end(), intersection.begin(), intersection.end(), inter.begin());
+			inter.resize(it - inter.begin());
+			intersection.swap(inter);
+		}
+		if ( intersection.size() == 0 ) return;;
+
 		if ( rule_number > DEP_RULES )
 		{
 			// dependency rules
@@ -63,7 +72,6 @@ namespace avant_analytics
 			OP op;
 			op.deserialize(rule_number, line[RULE_ARGS]);
 			rule_ptr[i].push_back(op);
-
 		}
 	}
 
@@ -90,24 +98,17 @@ namespace avant_analytics
 				trim(line);
 				boost::split(splitted, line, boost::is_any_of(":"));
 				parse(splitted, cols, col_rules, row_rules, dep_rules);
-
 			}   
 		}
 		infile.close();
 	}
 
-	vector<int> Parser::get_intersection(vector<int>& col, int start, int end)
+	void Parser::generate_range(vector<int> & range, int start, int end)
 	{
-		vector<int> intersection;
-		sort(col.begin(), col.end());
 		for (int i = start; i < end; ++i)
 		{
-			if (binary_search(col.begin(), col.end(), i))
-			{
-				intersection.push_back(i);
-			}	
-		};
-		return intersection;
+			range.push_back(i);
+		}
 	}
 
 }

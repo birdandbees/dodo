@@ -28,8 +28,8 @@ namespace avant_analytics
 
 			static void parse(vector<string>& line, vector<int>& cols, map<int, list<OP> >& col_rules, map<int, list<OP> >& row_rules, list<DepRule>    & dep_rules);
 			static void check(vector<string>& line);
-			static vector<int> get_intersection(vector<int>& col, int start, int end);
 			static void parse_file(string file_name, vector<int>& cols, map<int, list<OP> >& col_rules, map<int, list<OP> >& row_rules, list<DepRule>& dep_rules);
+			static void generate_range(vector<int> & range, int start, int end);
 	};
 
 }
