@@ -1,10 +1,9 @@
 #include "IOWorker.hpp"
-#include "Parser.hpp"
 
-namespace avant-analytics
+namespace avant_analytics
 {
 
-	map<int, list<OP> > IOWorker::read(string rule_dir)
+	/*map<int, list<OP> > IOWorker::read(string rule_dir)
 	{
 		ifstream rule_file;
 		rule_file.open(rule_dir, ifstream::in);
@@ -21,14 +20,24 @@ namespace avant-analytics
 		}
 		rule_file.close();
 		return rules;
-	}
+		}*/
 
-	void IOWorker::process(string rule_dir, int col_size, int row_size, string data_file, map<int, FUNC>& func_map)
+	void IOWorker::process(string rule_dir, string col_file, int col_size, int row_size, string data_file)
 	{
 		ofstream out;
-		out.open(rule_dir + ".out", ofstream::out);
-		map<int, list<OP> > rules = read(rule_dir);
+		out.open(col_file + ".out", ofstream::out);
+		vector<int> cols;
+		map<int, list<OP> > col_rules;
+		map<int, list<OP> > row_rules;
+		list<DepRule> dep_rules;
+		load_cols(col_file, cols);
+		map<int, MFUNC> mfunc_map;
+		map<int, FUNC> func_map;
+		MungeBits::load_funcs(func_map);
+		MungeBits::load_funcs(mfunc_map);
+		read(rule_dir, cols, col_rules, row_rules, dep_rules);
 		ifstream data;
+		string line;
 		data.open(data_file, ifstream::in);
 		if ( data.good() )
 		{
@@ -47,7 +56,7 @@ namespace avant-analytics
 							out << ",";
 							break;
 						case 2:
-							list<OP> list_of_rules = (list<OP>) rules[i];
+							list<OP> list_of_rules = (list<OP>) col_rules[i];
 							float value =  stof(row[i]);
 							for (list<OP>::iterator it = list_of_rules.begin(); it != list_of_rules.end(); ++it )
 							{

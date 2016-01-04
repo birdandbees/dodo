@@ -1,15 +1,19 @@
+#ifndef __AVANT_IOWORKER_HPP__
+#define __AVANT_IOWORKER_HPP__
 #include <iostream>
+#include "MemWorker.hpp"
+#include <vector>
+#include <map>
+#include <algorithm>
 
 namespace avant_analytics
 {
-	class IOWorker : public Worker
+	class IOWorker : public MemWorker
 	{
-
 		public:
-			map<int, list<OP> > read(string rule_file);
-			void process();
-
-
-	}
+			void process(string rule_dir, string col_file, int col_size, int row_size, string data_file);
+	};
 
 }
+
+#endif
