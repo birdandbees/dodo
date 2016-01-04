@@ -2,6 +2,7 @@
 #include "SmartSplit.hpp"
 #include "Parser.hpp"
 #include "MemWorker.hpp"
+#include "IOWorker.hpp"
 using namespace std;
 using namespace avant_analytics;
 
@@ -24,7 +25,11 @@ int main()
 	*/
 
 	//MemWorker
-	MemWorker worker;
+	//MemWorker worker;
+	//worker.process("/home/jing/tmp/test.rules", "/home/jing/tmp/test.rules.1", 20, 12, "/home/jing/tmp/data_file");
+
+	//MemWorker
+	IOWorker worker;
 	worker.process("/home/jing/tmp/test.rules", "/home/jing/tmp/test.rules.1", 20, 12, "/home/jing/tmp/data_file");
 	
 	return 0;
