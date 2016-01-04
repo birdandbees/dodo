@@ -1,11 +1,27 @@
 Simple Distributed Munging in C++
 
 src: C++ source
+
+dags: airflow dag python scripts
+
 to compile:
 ```
 make clean
 make 
 ```
-So far only simple demo code( etl_test.cpp, OP.[ch]pp ) are working. Rest of classes are still in progress
+Parser.[c|h]pp: parser to parse rules
 
-dags: airflow dag python scripts
+SmartSplit.[c|h]pp: split columns based on dependencies and return the number of partitions
+
+IOWorker.[c|h]pp: IO read data paritions and compute on cell basis.
+
+MemWorker.[c|h]pp: mmap shared and load the partitions into eigen Matrix to compute
+
+OP.hpp: operator class
+
+DepRule.hpp: dependency rules
+
+MungeBits.hpp: sample munging methods
+
+
+
