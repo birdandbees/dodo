@@ -1,16 +1,27 @@
-OBJS = OP.o
+DEMO_OBJS = OP.o 
+OBJS = IOWorker.o 
 CC = g++
 DEBUG = -g
-CFLAGS = -std=c++11 -Wall -c $(DEBUG)
-LFLAGS = -std=c++11 -Wall $(DEBUG)
+CFLAGS = -std=c++11 -Wall -c -I $(EIGEN)
+LFLAGS = $(DEBUG) -lboost_regex -I $(EIGEN)
 
-etl_test : $(OBJS)
-	    $(CC) $(LFLAGS) $(OBJS) etl_test.cpp -o etl_test
+#etl_test : $(DEMO_OBJS)
+#	    $(CC) $(LFLAGS) $(DEMO_OBJS) etl_test.cpp -o etl_test
+#
+main : $(OBJS) 
+			$(CC) $(CFLAGS) $(LFLAGS) $(OBJS) main.cpp -o main
 
-OP.o : OP.hpp
+OP.o : OP.hpp 
 	    $(CC) $(CFLAGS) OP.cpp
-
+Parser.o : Parser.hpp DepRule.hpp OP.hpp
+	    $(CC) $(LFLAGS) $(CFLAGS) Parser.cpp
+SmartSplit.o : SmartSplit.hpp
+	    $(CC) $(CFLAGS) SmartSplit.cpp
+IOWorker.o : IOWorker.hpp Worker.hpp MemWorker.hpp DepRule.hpp MungeBits.hpp
+	    $(CC) $(CFLAGS) IOWorker.cpp MemWorker.cpp
+MemWorker.o : MemWorker.hpp Worker.hpp DepRule.hpp MungeBits.hpp
+	    $(CC) $(CFLAGS) MemWorker.cpp
 
 clean:
-	    \rm *.o etl_test
+	    \rm -f *.o etl_test main
 
