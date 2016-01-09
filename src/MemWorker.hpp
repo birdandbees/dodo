@@ -36,8 +36,6 @@ namespace avant_analytics
 			const char DELIMITER = ',';
 			const char NEW_LINE = 10;
 			void process(string rule_dir, string col_file, int col_size, int row_size, string data_file);
-			void read(string rule_dir,vector<int>& cols, map<int, list<OP> >& col_rules, map<int, list<OP> >& row_rules, list<DepRule>& dep_rules);
-			void load_cols(string col_file, vector<int>& cols);
 			void check (int test, const char * message, ...);
 			char*  load_data(string data_file, size_t& size);
 
