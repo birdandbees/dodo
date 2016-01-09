@@ -199,6 +199,8 @@ namespace avant_analytics
 			(*it)->close();
 		}
 		// TODO: delte ofsteam, mem leak!
+		for (auto file : out )
+			delete file;
 	}
 
 	/*int main()
