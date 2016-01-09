@@ -8,7 +8,7 @@
 
 namespace avant_analytics
 {
-	class IOWorker : public MemWorker
+	class IOWorker : public Worker
 	{
 		public:
 			void process(string rule_dir, string col_file, int col_size, int row_size, string data_file);
