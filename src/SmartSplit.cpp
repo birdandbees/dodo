@@ -70,7 +70,7 @@ namespace avant_analytics
 					for (auto i : elements)
 						col_range.range.push_back(stoi(i));
 					// dep cols
-					queue_dep_cols(col_range, pair_queue);
+					if (stoi(splitted[RULE_NUMBER]) > DEP_RULES) queue_dep_cols(col_range, pair_queue);
 				}else if ( stoi(splitted[LINE_RANGE]) != -1 )
 				{
 					// single col
@@ -96,16 +96,16 @@ namespace avant_analytics
 			vector< vector<int> > part_data;
 			map<int, int> rep_map;
 			/*for (parent_t::iterator i = parent_map.begin(); i != parent_map.end(); ++i)
-			{
+				{
 				cout << i->first << "," << i->second << endl;
-			}*/
+				}*/
 			for (parent_t::iterator i = parent_map.begin(); i != parent_map.end(); ++i)
 			{
 				int idx;
 				map<int, int>::iterator it = rep_map.find( i-> second);
 				if ( it != rep_map.end() )
 				{
-					idx = rep_map[it->second];
+					idx = it->second;
 					part_data.at(idx).push_back(i->first);
 				}else
 				{
@@ -121,7 +121,9 @@ namespace avant_analytics
 				for( size_t j = 0; j < part_data.at(i).size(); ++j )
 				{
 					*outfiles[i % real_split] << part_data[i][j] << ",";
+					//cout << part_data[i][j] << ",";
 				}
+				//cout << endl;
 			}
 			close_files(outfiles);
 		}
@@ -152,11 +154,12 @@ namespace avant_analytics
 
 	void SmartSplit::drop_columns(vector<int>& col_vec, vector<int>& dropped)
 	{
-		for(auto i : dropped)
-		{
-			col_vec.erase(col_vec.begin() + i);
-		}
-		col_vec.shrink_to_fit();
+		vector<int> set_diff(col_vec.size());
+		sort (col_vec.begin(), col_vec.end());
+		sort (dropped.begin(), dropped.end());
+		vector<int>::iterator it = set_difference(col_vec.begin(), col_vec.end(), dropped.begin(), dropped.end(), set_diff.begin());
+		set_diff.resize(it-set_diff.begin()); 
+		col_vec.swap(set_diff);
 	}
 	void SmartSplit::mark_drop_columns(ColRange& col_range, vector<int>* dropped)
 	{
