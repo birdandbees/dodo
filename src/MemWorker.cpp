@@ -23,16 +23,16 @@ namespace avant_analytics
 		int status;
 
 		fd = open (data_file.c_str(), O_RDONLY);
-		check (fd < 0, "open %s failed: %s", data_file, strerror (errno));
+		check (fd < 0, "open %s failed: %s", data_file.c_str(), strerror (errno));
 
 		/* Get the size of the file. */
 		status = fstat (fd, & s);
-		check (status < 0, "stat %s failed: %s", data_file, strerror (errno));
+		check (status < 0, "stat %s failed: %s", data_file.c_str(), strerror (errno));
 		size = s.st_size;
 
 		/* Memory-map the file shared. */
 		char * mapped = (char*) mmap (0, size, PROT_READ, MAP_PRIVATE, fd, 0);
-		check (mapped == MAP_FAILED, "mmap %s failed: %s", data_file, strerror (errno));
+		check (mapped == MAP_FAILED, "mmap %s failed: %s", data_file.c_str(), strerror (errno));
 		return mapped;
 	}
 
