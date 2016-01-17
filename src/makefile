@@ -5,6 +5,8 @@ DEBUG = -g
 CFLAGS = -std=c++11 -Wall -c -I $(EIGEN) -lboost_regex 
 LFLAGS = $(DEBUG) -lboost_regex -lboost_iostreams -I $(EIGEN)
 
+.PHONY: clean lint etl_test
+
 #etl_test : $(DEMO_OBJS)
 #	    $(CC) $(LFLAGS) $(DEMO_OBJS) etl_test.cpp -o etl_test
 #
@@ -21,7 +23,7 @@ Parser.o : Parser.hpp DepRule.hpp OP.hpp
 SmartSplit.o : SmartSplit.hpp
 	    $(CC) $(CFLAGS) SmartSplit.cpp
 IOWorker.o : IOWorker.hpp Worker.hpp DepRule.hpp MungeBits.hpp
-	    $(CC) $(CFLAGS) IOWorker.cpp MemWorker.cpp
+	    $(CC) $(CFLAGS) IOWorker.cpp 
 MemWorker.o : MemWorker.hpp Worker.hpp DepRule.hpp MungeBits.hpp
 	    $(CC) $(CFLAGS) MemWorker.cpp
 Worker.o : Worker.hpp DepRule.hpp MungeBits.hpp
@@ -29,4 +31,7 @@ Worker.o : Worker.hpp DepRule.hpp MungeBits.hpp
 
 clean:
 	    \rm -f *.o etl_test main
+
+lint:
+	  python ../scripts/lint.py dodo cpp ./ 
 
