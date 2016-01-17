@@ -27,11 +27,17 @@ namespace avant_analytics
 				// do nothing;
 				return 0;
 			}
+			
+			inline static bool add_two_columns(vector<string>& args, vector< Ref<COLUMN> >& cols)
+			{
+				 cols.at(0) = cols.at(0) + cols.at(1); 
+				 return 1;
+			};
 
 			inline static void load_funcs(map<int, FUNC>& func_map) 
 			{
 				func_map[1021] = &multiply_by;
-				func_map[3021] = &filter_by_function;;
+				func_map[3021] = &filter_by_function;
 			}
 
 			inline static bool n_times_mean(vector<string>& args, vector< Ref< Matrix<float, Dynamic, 1> > >&cols)
@@ -43,6 +49,7 @@ namespace avant_analytics
 			inline static void load_funcs(map<int, MFUNC>& func_map)
 			{
 				func_map[1501] = &n_times_mean;
+				func_map[2001] = &add_two_columns;
 			}
 	};
 }

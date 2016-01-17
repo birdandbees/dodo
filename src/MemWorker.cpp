@@ -62,6 +62,7 @@ namespace avant_analytics
 		int new_count = 0;
 		int new_row = 0;
 		map<int, int> col_mapping;
+		map<int, int> col_reverse_mapping;
 		//apply row-level rules when loading into eigen
 		if ( data != NULL )
 		{
@@ -100,6 +101,7 @@ namespace avant_analytics
 					matrix(new_row,new_col) =  this_value;
 					//cout << "[" << new_row << "][" << new_col << "] =" << this_value<< endl;
 					col_mapping[new_col] = col;
+					col_reverse_mapping[col] = new_col;
 				}
 			}
 		}
@@ -108,9 +110,18 @@ namespace avant_analytics
 
 		//TODO: apply dep_rules
 		typedef Matrix<float, Dynamic, 1> COLUMN;
+		for(auto rule : dep_rules)
+		{
+			  vector< Ref<COLUMN> > operands;
+				for (auto i : rule.range )
+				{
+					 operands.push_back(matrix.col(col_reverse_mapping[i]));
+				}
+				mfunc_map[rule.op_id](rule.params, operands);
+		};
 
 		//apply col-level FUNC
-		for (int i = 0;  i< cols.size(); ++i)
+		for (size_t i = 0;  i< cols.size(); ++i)
 		{
 
 			list<OP> list_of_rules = (list<OP>) col_rules[col_mapping[i]];
