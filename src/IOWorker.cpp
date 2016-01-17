@@ -46,7 +46,7 @@ namespace avant_analytics
 				vector<string> row;
 				split(row, line, boost::is_any_of(","));
 				//apply FUNC
-				for (int i = 0;  i< row.size(); ++i)
+				for (size_t i = 0;  i< row.size(); ++i)
 				{
 
 					switch (cols[i])
